@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HMC Pricing Intake</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <style>
+    :root {
+      --hmc-green: #7A8F5C;
+      --hmc-green-light: #EEF1E8;
+      --hmc-green-dark: #566940;
+      --hmc-text: #1F1F1D;
+      --hmc-text-muted: #6B6B66;
+      --hmc-border: #E0DED8;
+      --hmc-bg: #FAFAF8;
+      --hmc-card: #FFFFFF;
+      --hmc-danger: #C4432B;
+      --hmc-info: #3B7FBF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", -apple-system, sans-serif;
+      font-size: 13px;
+      color: var(--hmc-text);
+      background: var(--hmc-bg);
+      line-height: 1.45;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--hmc-green);
+      color: #fff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header svg { flex-shrink: 0; }
+    .header h1 { font-size: 14px; font-weight: 600; letter-spacing: 0.01em; }
+    .header .subtitle { font-size: 11px; opacity: 0.8; }
+
+    /* ---- Status bar ---- */
+    .status-bar {
+      padding: 6px 16px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-bar.ok { background: var(--hmc-green-light); color: var(--hmc-green-dark); }
+    .status-bar.err { background: #FDEAE7; color: var(--hmc-danger); }
+    .status-bar.busy { background: #E8F0F8; color: var(--hmc-info); }
+    .status-dot {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    }
+    .status-bar.ok .status-dot { background: var(--hmc-green); }
+    .status-bar.err .status-dot { background: var(--hmc-danger); }
+    .status-bar.busy .status-dot { background: var(--hmc-info); animation: pulse 1.2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ---- Sections ---- */
+    .section {
+      margin: 10px 12px;
+      background: var(--hmc-card);
+      border: 1px solid var(--hmc-border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .section-header {
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--hmc-text-muted);
+      border-bottom: 1px solid var(--hmc-border);
+      background: #F7F6F3;
+    }
+    .section-body { padding: 10px 12px; }
+
+    /* ---- Email metadata ---- */
+    .meta-row {
+      display: flex;
+      gap: 6px;
+      padding: 3px 0;
+    }
+    .meta-label {
+      font-size: 11px;
+      color: var(--hmc-text-muted);
+      min-width: 56px;
+      flex-shrink: 0;
+    }
+    .meta-value {
+      font-size: 12px;
+      color: var(--hmc-text);
+      word-break: break-word;
+    }
+    .meta-value.conv-id {
+      font-family: "Cascadia Code", "Consolas", monospace;
+      font-size: 10px;
+      color: var(--hmc-text-muted);
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ---- Attachments ---- */
+    .att-list { list-style: none; }
+    .att-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid #F0EFEB;
+    }
+    .att-item:last-child { border-bottom: none; }
+    .att-item input[type="checkbox"] { accent-color: var(--hmc-green); }
+    .att-icon {
+      width: 28px; height: 28px; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 600; flex-shrink: 0;
+    }
+    .att-icon.pdf { background: #FDEAE7; color: var(--hmc-danger); }
+    .att-icon.doc { background: #E0EEF8; color: #2B5797; }
+    .att-icon.img { background: #E8F5E8; color: var(--hmc-green-dark); }
+    .att-icon.other { background: #F0EFEB; color: var(--hmc-text-muted); }
+    .att-name { font-size: 12px; flex: 1; word-break: break-word; }
+    .att-size { font-size: 10px; color: var(--hmc-text-muted); white-space: nowrap; }
+    .no-att { font-size: 12px; color: var(--hmc-text-muted); font-style: italic; padding: 6px 0; }
+
+    /* ---- Form fields ---- */
+    .field { margin-bottom: 10px; }
+    .field:last-child { margin-bottom: 0; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--hmc-text-muted);
+      margin-bottom: 4px;
+    }
+    .field select, .field input[type="text"] {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid var(--hmc-border);
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--hmc-text);
+      transition: border-color 0.15s;
+    }
+    .field select:focus, .field input:focus {
+      outline: none;
+      border-color: var(--hmc-green);
+      box-shadow: 0 0 0 2px rgba(122,143,92,0.15);
+    }
+
+    /* ---- Buttons ---- */
+    .btn-row {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 12px;
+      border: none;
+      border-radius: 5px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary {
+      background: var(--hmc-green);
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--hmc-green-dark); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--hmc-text-muted);
+      border: 1px dashed var(--hmc-border);
+      font-weight: 400;
+      font-size: 12px;
+    }
+    .btn-ghost:hover:not(:disabled) { border-color: #BBB; color: var(--hmc-text); }
+
+    /* ---- Result banner ---- */
+    .result {
+      margin: 0 12px 10px;
+      padding: 8px 12px;
+      border-radius: 5px;
+      font-size: 12px;
+      display: none;
+    }
+    .result.success { display: block; background: var(--hmc-green-light); color: var(--hmc-green-dark); }
+    .result.error { display: block; background: #FDEAE7; color: var(--hmc-danger); }
+
+    /* ---- Debug console ---- */
+    .debug-toggle {
+      text-align: center;
+      padding: 6px;
+    }
+    .debug-toggle button {
+      background: none; border: none; color: var(--hmc-text-muted);
+      font-size: 10px; cursor: pointer; text-decoration: underline;
+    }
+    #debugLog {
+      display: none;
+      margin: 0 12px 12px;
+      padding: 8px;
+      background: #1E1E1E;
+      color: #D4D4D4;
+      font-family: "Cascadia Code", "Consolas", monospace;
+      font-size: 10px;
+      border-radius: 5px;
+      max-height: 150px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="2" y="3" width="16" height="14" rx="2" stroke="#fff" stroke-width="1.5" fill="none"/>
+      <path d="M2 7l8 5 8-5" stroke="#fff" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+    </svg>
+    <div>
+      <h1>HMC Pricing Intake</h1>
+      <div class="subtitle">File attachments to SubPricing</div>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div id="statusBar" class="status-bar busy">
+    <div class="status-dot"></div>
+    <span id="statusText">Connecting to Outlook...</span>
+  </div>
+
+  <!-- Email metadata -->
+  <div class="section">
+    <div class="section-header">Current email</div>
+    <div class="section-body">
+      <div class="meta-row"><span class="meta-label">From</span><span class="meta-value" id="emailFrom">—</span></div>
+      <div class="meta-row"><span class="meta-label">Subject</span><span class="meta-value" id="emailSubject">—</span></div>
+      <div class="meta-row"><span class="meta-label">Date</span><span class="meta-value" id="emailDate">—</span></div>
+      <div class="meta-row"><span class="meta-label">Thread</span><span class="meta-value conv-id" id="emailConvId">—</span></div>
+    </div>
+  </div>
+
+  <!-- Attachments -->
+  <div class="section">
+    <div class="section-header">Attachments</div>
+    <div class="section-body">
+      <ul class="att-list" id="attList">
+        <li class="no-att">No attachments found</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Filing form -->
+  <div class="section">
+    <div class="section-header">File to</div>
+    <div class="section-body">
+      <div class="field">
+        <label>Project</label>
+        <select id="selProject">
+          <option value="">— Select project —</option>
+          <option value="4818">4818 – LGH Angio</option>
+          <option value="4807">4807 – Temple Sholom</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Change event (CCN)</label>
+        <select id="selCCN" disabled>
+          <option value="">— Select project first —</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Trade name (optional rename)</label>
+        <input type="text" id="txtTrade" placeholder="e.g. ABC Roofing"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result banner -->
+  <div class="result" id="resultBanner"></div>
+
+  <!-- Action buttons -->
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btnSubmit" disabled>
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 4L5.5 10.5 2 7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Save & upload attachment
+    </button>
+    <button class="btn btn-ghost" disabled title="Coming soon">
+      Log communication (placeholder)
+    </button>
+    <button class="btn btn-ghost" disabled title="Coming soon">
+      View CCN history (placeholder)
+    </button>
+  </div>
+
+  <!-- Debug -->
+  <div class="debug-toggle">
+    <button onclick="toggleDebug()">Toggle debug log</button>
+  </div>
+  <pre id="debugLog"></pre>
+
+<script>
+// ============================================================
+// CONFIG — replace these before testing
+// ============================================================
+const CONFIG = {
+  // Power Automate HTTP trigger URL — paste yours here
+  flowUrl: "PASTE_YOUR_POWER_AUTOMATE_HTTP_TRIGGER_URL_HERE",
+
+  // SharePoint site base (used for future direct REST calls)
+  spSite: "https://halsemartin.sharepoint.com/sites/Workforce",
+
+  // Hardcoded CCNs per project (replace with live data later)
+  ccns: {
+    "4818": [
+      { value: "CCN-001", label: "CCN-001 – Crashrail Modifications" },
+      { value: "CCN-002", label: "CCN-002 – Demo scope" },
+      { value: "CCN-003", label: "CCN-003 – Structural bracing" },
+      { value: "CCN-004", label: "CCN-004 – Added blocking" },
+      { value: "CCN-005", label: "CCN-005 – HVAC reroute" },
+      { value: "CCN-006", label: "CCN-006 – Fire stopping" },
+      { value: "CCN-007", label: "CCN-007 – Ceiling grid" },
+      { value: "CCN-008", label: "CCN-008 – Flooring revision" },
+      { value: "CCN-009", label: "CCN-009 – Plumbing relocation" },
+      { value: "CCN-010", label: "CCN-010 – Electrical panel move" },
+    ],
+    "4807": [
+      { value: "CCO-001", label: "CCO-001 – Foundation revision" },
+      { value: "CCO-002", label: "CCO-002 – Window spec change" },
+      { value: "CCO-003", label: "CCO-003 – Roof drainage" },
+    ]
+  }
+};
+
+// ============================================================
+// State
+// ============================================================
+let currentItem = null;
+let attachmentMeta = [];     // [{id, name, size, contentType}]
+let attachmentContent = {};  // id -> base64 string
+
+// ============================================================
+// Debug logger
+// ============================================================
+function log(msg) {
+  const el = document.getElementById("debugLog");
+  const ts = new Date().toLocaleTimeString();
+  el.textContent += `[${ts}] ${msg}\n`;
+  el.scrollTop = el.scrollHeight;
+  console.log(`[HMC] ${msg}`);
+}
+function toggleDebug() {
+  const el = document.getElementById("debugLog");
+  el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
+// ============================================================
+// Status helpers
+// ============================================================
+function setStatus(type, text) {
+  const bar = document.getElementById("statusBar");
+  bar.className = "status-bar " + type;
+  document.getElementById("statusText").textContent = text;
+}
+function showResult(type, msg) {
+  const el = document.getElementById("resultBanner");
+  el.className = "result " + type;
+  el.textContent = msg;
+}
+
+// ============================================================
+// Office.js initialization
+// ============================================================
+Office.onReady(function(info) {
+  log("Office.onReady fired. Host: " + info.host + ", Platform: " + info.platform);
+
+  if (info.host !== Office.HostType.Outlook) {
+    setStatus("err", "Not running inside Outlook");
+    log("ERROR: Host is not Outlook");
+    return;
+  }
+
+  // Wire up the item-changed handler (works when pinned)
+  if (Office.context.mailbox.addHandlerAsync) {
+    Office.context.mailbox.addHandlerAsync(
+      Office.EventType.ItemChanged,
+      function() { log("ItemChanged event"); loadCurrentEmail(); }
+    );
+    log("ItemChanged handler registered");
+  }
+
+  // Wire up form controls
+  document.getElementById("selProject").addEventListener("change", onProjectChange);
+  document.getElementById("selCCN").addEventListener("change", validateForm);
+  document.getElementById("btnSubmit").addEventListener("click", onSubmit);
+
+  // Load initial email
+  loadCurrentEmail();
+});
+
+// ============================================================
+// Read current email
+// ============================================================
+function loadCurrentEmail() {
+  currentItem = Office.context.mailbox.item;
+  attachmentMeta = [];
+  attachmentContent = {};
+
+  if (!currentItem) {
+    setStatus("err", "No email selected");
+    log("No current item");
+    renderEmail(null);
+    return;
+  }
+
+  setStatus("busy", "Reading email...");
+  log("Reading item: " + (currentItem.subject || "(no subject)"));
+
+  // Populate metadata
+  renderEmail({
+    from: currentItem.from ? currentItem.from.displayName + " <" + currentItem.from.emailAddress + ">" : "—",
+    subject: currentItem.subject || "(no subject)",
+    date: currentItem.dateTimeCreated ? currentItem.dateTimeCreated.toLocaleDateString("en-CA") + " " + currentItem.dateTimeCreated.toLocaleTimeString("en-CA", {hour:"2-digit", minute:"2-digit"}) : "—",
+    conversationId: currentItem.conversationId || "—"
+  });
+
+  // Read attachments
+  const atts = currentItem.attachments;
+  if (atts && atts.length > 0) {
+    attachmentMeta = atts.filter(a => !a.isInline).map(a => ({
+      id: a.id,
+      name: a.name,
+      size: a.size,
+      contentType: a.contentType || ""
+    }));
+    log("Found " + attachmentMeta.length + " non-inline attachments");
+    renderAttachments(attachmentMeta);
+    setStatus("ok", "Email loaded — " + attachmentMeta.length + " attachment(s)");
+  } else {
+    log("No attachments on this email");
+    renderAttachments([]);
+    setStatus("ok", "Email loaded — no attachments");
+  }
+  validateForm();
+}
+
+// ============================================================
+// Render helpers
+// ============================================================
+function renderEmail(data) {
+  document.getElementById("emailFrom").textContent = data ? data.from : "—";
+  document.getElementById("emailSubject").textContent = data ? data.subject : "—";
+  document.getElementById("emailDate").textContent = data ? data.date : "—";
+  document.getElementById("emailConvId").textContent = data ? data.conversationId : "—";
+  document.getElementById("emailConvId").title = data ? data.conversationId : "";
+}
+
+function renderAttachments(atts) {
+  const list = document.getElementById("attList");
+  if (atts.length === 0) {
+    list.innerHTML = '<li class="no-att">No attachments found</li>';
+    return;
+  }
+  list.innerHTML = atts.map((a, i) => {
+    const ext = (a.name.split(".").pop() || "").toLowerCase();
+    let iconClass = "other", iconLabel = ext.toUpperCase().slice(0,4);
+    if (ext === "pdf") { iconClass = "pdf"; iconLabel = "PDF"; }
+    else if (["doc","docx"].includes(ext)) { iconClass = "doc"; iconLabel = "DOC"; }
+    else if (["xls","xlsx"].includes(ext)) { iconClass = "doc"; iconLabel = "XLS"; }
+    else if (["jpg","jpeg","png","gif","bmp"].includes(ext)) { iconClass = "img"; iconLabel = "IMG"; }
+    const sizeStr = a.size > 1048576
+      ? (a.size / 1048576).toFixed(1) + " MB"
+      : Math.round(a.size / 1024) + " KB";
+    return `<li class="att-item">
+      <input type="checkbox" checked data-att-index="${i}" onchange="validateForm()"/>
+      <div class="att-icon ${iconClass}">${iconLabel}</div>
+      <span class="att-name">${escHtml(a.name)}</span>
+      <span class="att-size">${sizeStr}</span>
+    </li>`;
+  }).join("");
+}
+
+function escHtml(s) {
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ============================================================
+// CCN cascade
+// ============================================================
+function onProjectChange() {
+  const proj = document.getElementById("selProject").value;
+  const sel = document.getElementById("selCCN");
+  sel.innerHTML = "";
+
+  if (!proj) {
+    sel.innerHTML = '<option value="">— Select project first —</option>';
+    sel.disabled = true;
+  } else {
+    const ccns = CONFIG.ccns[proj] || [];
+    sel.innerHTML = '<option value="">— Select CCN —</option>'
+      + ccns.map(c => `<option value="${c.value}">${c.label}</option>`).join("");
+    sel.disabled = false;
+    log("Loaded " + ccns.length + " CCNs for project " + proj);
+  }
+  validateForm();
+}
+
+// ============================================================
+// Form validation
+// ============================================================
+function validateForm() {
+  const proj = document.getElementById("selProject").value;
+  const ccn = document.getElementById("selCCN").value;
+  const checked = document.querySelectorAll('.att-item input[type="checkbox"]:checked');
+  const ok = proj && ccn && checked.length > 0;
+  document.getElementById("btnSubmit").disabled = !ok;
+}
+
+// ============================================================
+// Submit — get attachment content + POST to Power Automate
+// ============================================================
+async function onSubmit() {
+  const btn = document.getElementById("btnSubmit");
+  btn.disabled = true;
+  btn.textContent = "Uploading...";
+  setStatus("busy", "Uploading attachment(s)...");
+  showResult("", "");
+
+  try {
+    const proj = document.getElementById("selProject").value;
+    const ccn = document.getElementById("selCCN").value;
+    const trade = document.getElementById("txtTrade").value.trim();
+    const convId = currentItem.conversationId || "";
+    const fromEmail = currentItem.from ? currentItem.from.emailAddress : "";
+    const subject = currentItem.subject || "";
+
+    // Get selected attachment indices
+    const checks = document.querySelectorAll('.att-item input[type="checkbox"]:checked');
+    const selectedIndices = Array.from(checks).map(c => parseInt(c.dataset.attIndex));
+    log("Selected " + selectedIndices.length + " attachments");
+
+    // Fetch attachment content from Office.js
+    const attachments = [];
+    for (const idx of selectedIndices) {
+      const att = attachmentMeta[idx];
+      log("Fetching content for: " + att.name);
+      const content = await getAttachmentContent(att.id);
+      attachments.push({
+        name: trade ? (trade + "_" + att.name) : att.name,
+        contentType: att.contentType,
+        contentBase64: content
+      });
+      log("Got " + (content.length / 1024).toFixed(0) + " KB base64 for " + att.name);
+    }
+
+    // Build payload
+    const payload = {
+      projectNumber: proj,
+      ccn: ccn,
+      tradeName: trade,
+      conversationId: convId,
+      fromEmail: fromEmail,
+      subject: subject,
+      attachments: attachments
+    };
+
+    log("Posting to Power Automate flow...");
+    log("Payload size: " + (JSON.stringify(payload).length / 1024).toFixed(0) + " KB");
+
+    // POST to Power Automate HTTP trigger
+    if (CONFIG.flowUrl.startsWith("PASTE")) {
+      // Demo mode — simulate success
+      log("DEMO MODE: No flow URL configured. Simulating success.");
+      await new Promise(r => setTimeout(r, 1500));
+      showResult("success", "DEMO: Would have uploaded " + attachments.length + " file(s) to " + ccn + " in project " + proj + ". Configure flowUrl to go live.");
+      setStatus("ok", "Demo complete");
+    } else {
+      const resp = await fetch(CONFIG.flowUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!resp.ok) throw new Error("Flow returned " + resp.status + ": " + (await resp.text()));
+      const result = await resp.json().catch(() => ({}));
+      log("Flow response: " + JSON.stringify(result));
+      showResult("success", "Uploaded " + attachments.length + " file(s) to " + ccn + ". Item ID: " + (result.itemId || "—"));
+      setStatus("ok", "Filed successfully");
+    }
+
+  } catch (err) {
+    log("ERROR: " + err.message);
+    showResult("error", "Failed: " + err.message);
+    setStatus("err", "Upload failed");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 4L5.5 10.5 2 7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Save & upload attachment`;
+    validateForm();
+  }
+}
+
+// ============================================================
+// Office.js attachment content reader (promise wrapper)
+// ============================================================
+function getAttachmentContent(attachmentId) {
+  return new Promise((resolve, reject) => {
+    currentItem.getAttachmentContentAsync(attachmentId, function(result) {
+      if (result.status === Office.AsyncResultStatus.Succeeded) {
+        // result.value.content is base64 for file attachments
+        resolve(result.value.content);
+      } else {
+        reject(new Error("getAttachmentContentAsync failed: " + JSON.stringify(result.error)));
+      }
+    });
+  });
+}
+</script>
+
+</body>
+</html>
