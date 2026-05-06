@@ -2,11 +2,10 @@
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
-           xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
            xsi:type="MailApp">
 
   <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
-  <Version>1.0.0.1</Version>
+  <Version>1.0.0.2</Version>
   <ProviderName>Halse-Martin Construction</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="HMC Pricing Intake"/>
@@ -14,7 +13,7 @@
 
   <IconUrl DefaultValue="https://dutchdev85.github.io/hmc-outlook-addin/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://dutchdev85.github.io/hmc-outlook-addin/icon-64.png"/>
-  <SupportUrl DefaultValue="https://halsemartin.sharepoint.com"/>
+  <SupportUrl DefaultValue="https://dutchdev85.github.io/hmc-outlook-addin/taskpane.html"/>
 
   <AppDomains>
     <AppDomain>https://dutchdev85.github.io</AppDomain>
@@ -39,7 +38,7 @@
     </Form>
   </FormSettings>
 
-  <Permissions>ReadWriteMailbox</Permissions>
+  <Permissions>ReadItem</Permissions>
   <Rule xsi:type="RuleCollection" Mode="Or">
     <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
   </Rule>
